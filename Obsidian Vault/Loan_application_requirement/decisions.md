@@ -1,0 +1,22 @@
+---
+title: "Loan_application_requirement — Durable decisions"
+tags: [loan_application_requirement, decisions]
+created: 2026-08-26
+type: decisions
+status: imported
+---
+
+# Durable decisions
+
+- **2026-08-26** — Formalized two new persistent subagents in `.claude/agents/`: `planner` (PLAN mode drafts architecture/spec artifacts before each module/task's implementation, replacing the lead agent drafting them directly; FINAL REVIEW mode runs exactly once at whole-project completion, comparing the finished system against all spec artifacts) and `enforcer` (formalizes the previously ad-hoc per-module/task code-and-architecture review role — layering, contracts, KISS/DRY, naming — unchanged in trigger cadence). Both output a strict `VERDICT: ok|block` / `FINDINGS:` format and never fix anything themselves. `CLAUDE.md` was updated so `planner`'s FINAL REVIEW must return `ok` before `goal-evaluator` is dispatched for final project completion judgment. Design principle: `enforcer` = code-level review, `planner` = spec-level review, `goal-evaluator` = completion-proof judge — three non-overlapping roles, no duplicate checks.
+- **2026-08-26** — `planner` decides its own artifact set per project need (from a documented 10-file table: project.md, requirements.md, workflows.md, data-model.md, architecture.md, contracts.md, ux.md, testing.md, decisions.md, risks.md) rather than being locked to a fixed list; this project currently only needs ARCHITECTURE.md/CONTRACTS.md/AGENT_LOG.md and should keep extending those unless a module's complexity genuinely warrants a new file.
+- **2026-08-25** — Adopted a versioned-folder repo layout: `V1/` holds the original runnable FastAPI backend (frozen), while `CLAUDE.md`, `.claude/`, `ARCHITECTURE.md`, `CONTRACTS.md`, and `AGENT_LOG.md` stay at the project root as the shared, version-spanning source of truth. Version folders must be fully independent siblings — one version must never import, reference, or require another version folder's files to run.
+- **2026-08-26** — V2 (the unified UI rewrite) is permanently static: no backend, no database, deployable as plain static files (e.g. GitHub Pages), calling only public keyless APIs (Open-Meteo, GitHub) directly from the browser. V2's Imports module was redesigned as a synchronous client-side parse-validate-download flow instead of the async-job/polling model, since there is no server to host a job queue. Actually deploying V2 to GitHub Pages remains a separate, explicitly out-of-scope step requiring its own confirmation.
+- **2026-08-25** — Coding standard is atomic, KISS-style changes with heavy use of Implementer/Enforcer subagents and the Workflow tool for independent sub-pieces, to keep the lead agent's context low over the project's long lifetime. Every Bash command approval request must include an explanation sentence, even when it seems redundant.
+- **2026-08-27** — Added a deterministic `PostToolUse` hook (`.claude/hooks/check_duplication.py`) scoped to `site/js/*.js` that rescans for near-duplicate 6+-line code blocks after every Edit/Write, because `enforcer` (model-judgment review) had missed the same copy-paste duplication class three times before catching it on a whole-module pass. `planner.md` PLAN mode now requires every task-plan entry to declare `Depends on` / `Produces` / `Directly related tasks`, and `CLAUDE.md` requires the lead agent to paste sibling tasks' declared `Produces` verbatim into Implementer dispatch prompts — so parallel/sequential Implementers reuse existing helpers instead of re-inventing them blind.
+- **2026-08-27** — Standing rule for choosing Skill vs Subagent on any future capability: a Skill fits occasional/discretionary use (invocation depends on someone remembering to call it); a Subagent fits recurring/semi-constant verification needs (dispatch can be enforced by the lead agent's own process rules). Neither mechanism burns context just by sitting in the project — both are lazy-loaded, so token cost is not a factor in the choice.
+- **2026-08-27** — Declined for this project (confirmed cross-project future-use ideas, not project requirements): hosting skills in the Obsidian vault for lazy loading, and a persistent teammate/task-board capability. The existing `Agent` tool and `Workflow` tool already cover this project's actual parallelism needs.
+
+## Logs
+- [[Loan_application_requirement/logs/2026-08-26-planner-enforcer-agents|Planner enforcer agents]]
+- [[Loan_application_requirement/logs/2026-08-27-dup-hook-and-task-declarations|Dup hook and task declarations]]
